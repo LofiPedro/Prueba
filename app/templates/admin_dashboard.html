@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}Panel administrador - SeguroCRM{% endblock %}
+{% block content %}
+<h1 class="mb-4">Panel del administrador</h1>
+{% if not team %}
+<div class="alert alert-warning">
+  Aún no tienes un equipo. Crea uno para invitar agentes.
+</div>
+<form method="post" action="{{ url_for('main.create_team') }}" class="card card-body">
+  <div class="mb-3">
+    <label class="form-label" for="team_name">Nombre del equipo</label>
+    <input class="form-control" type="text" id="team_name" name="team_name" required>
+  </div>
+  <button class="btn btn-success" type="submit">Crear equipo</button>
+</form>
+{% else %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5">Equipo</h2>
+        <p class="mb-1"><strong>Nombre:</strong> {{ team.name }}</p>
+        <p class="mb-1"><strong>Código de acceso:</strong> <span class="badge bg-secondary">{{ team.join_code }}</span></p>
+        <p class="text-muted">Comparte este código con los agentes para que se unan.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5">Agentes del equipo</h2>
+        {% if members %}
+        <ul class="list-group list-group-flush">
+          {% for member in members %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ member.full_name }}<br><small class="text-muted">{{ member.email }}</small></span>
+            <span class="badge bg-light text-dark">Registrado: {{ member.created_at.strftime('%d/%m/%Y') }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Aún no hay agentes en el equipo.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5">Actividad reciente de sesiones</h2>
+        {% if sessions %}
+        <ul class="list-group list-group-flush">
+          {% for session in sessions %}
+          <li class="list-group-item">
+            <strong>{{ session.user.full_name }}</strong><br>
+            Inicio: {{ session.login_time.strftime('%d/%m/%Y %H:%M') }}<br>
+            {% if session.logout_time %}
+            Cierre: {{ session.logout_time.strftime('%d/%m/%Y %H:%M') }}
+            {% else %}
+            <span class="text-success">En línea</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Sin registros de sesiones aún.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5">Mensajería del equipo</h2>
+        {% if messages %}
+        <div class="list-group mb-3">
+          {% for message in messages %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <strong>{{ message.sender.full_name }}</strong>
+              <small class="text-muted">{{ message.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+            </div>
+            <p class="mb-0">{{ message.content }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">Aún no hay mensajes en el equipo.</p>
+        {% endif %}
+        <form method="post" action="{{ url_for('main.send_message') }}">
+          <div class="mb-3">
+            <textarea class="form-control" name="content" rows="3" placeholder="Escribe un mensaje para tus agentes" required></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Enviar mensaje</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5">Leads recientes</h2>
+        {% if leads %}
+        <ul class="list-group list-group-flush">
+          {% for lead in leads %}
+          <li class="list-group-item">
+            <strong>{{ lead.name }}</strong> - {{ lead.status }}<br>
+            <small class="text-muted">Asignado a {{ lead.agent.full_name }} | {{ lead.created_at.strftime('%d/%m/%Y') }}</small>
+            {% if lead.notes %}<p class="mb-0 mt-1">{{ lead.notes }}</p>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Sin leads registrados todavía.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5">Próximas citas</h2>
+        {% if appointments %}
+        <ul class="list-group list-group-flush">
+          {% for appointment in appointments %}
+          <li class="list-group-item">
+            <strong>{{ appointment.agent.full_name }}</strong>
+            {% if appointment.lead %}
+            con {{ appointment.lead.name }}
+            {% endif %}
+            <br><small class="text-muted">{{ appointment.scheduled_for.strftime('%d/%m/%Y %H:%M') }}</small>
+            {% if appointment.notes %}<p class="mb-0 mt-1">{{ appointment.notes }}</p>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No hay citas agendadas.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
